@@ -128,4 +128,26 @@ public class StatisticsAggregatorTest {
         assertThat(statistics.getMax()).isEqualTo(TEST_MAX);
         assertThat(statistics.getAverage()).isEqualTo(TEST_AVG);
     }
+
+    // This test validates that for a particular timestamp, only aggregation of the last 60 seconds transaction is done.
+    @Test
+    public void checkStatisticsOnAddingMultipleTransactionsWithHighTimestampDifference() {
+        List<Transaction> transactionList = new ArrayList<>();
+        transactionList.add(new Transaction(MOCK_TIME_STAMP_IN_MILLIS + 20000, TEST_AMOUNT));
+        transactionList.add(new Transaction(MOCK_TIME_STAMP_IN_MILLIS + 25000, TEST_AMOUNT2));
+        transactionList.add(new Transaction(MOCK_TIME_STAMP_IN_MILLIS + 80000, TEST_AMOUNT3));
+        transactionList.add(new Transaction(MOCK_TIME_STAMP_IN_MILLIS + 100000, TEST_AMOUNT4));
+        transactionList.forEach(
+                transaction -> StatisticsAggregator.addTransaction(
+                        transaction, transaction.getTimestamp())
+        );
+        Statistics statistics = StatisticsAggregator.getAggregatedStatistics(MOCK_TIME_STAMP_IN_MILLIS + 100000);
+        assertThat(statistics).isNotNull();
+        assertThat(statistics.isEmpty()).isFalse();
+        assertThat(statistics.getCount()).isEqualTo(2);
+        assertThat(statistics.getSum()).isEqualTo(700.00);
+        assertThat(statistics.getMin()).isEqualTo(300.00);
+        assertThat(statistics.getMax()).isEqualTo(400.00);
+        assertThat(statistics.getAverage()).isEqualTo(350.00);
+    }
 }
