@@ -11,8 +11,8 @@ final class Statistics {
     private double average;
 
     Statistics() {
-        min = Integer.MAX_VALUE;
-        max = Integer.MIN_VALUE;
+        min = Double.MAX_VALUE;
+        max = Double.MIN_VALUE;
     }
 
     synchronized void addTransaction(Transaction transaction) {
