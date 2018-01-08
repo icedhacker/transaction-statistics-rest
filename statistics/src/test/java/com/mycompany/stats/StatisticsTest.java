@@ -49,6 +49,26 @@ public class StatisticsTest {
     }
 
     @Test
+    public void checkAllStatisticsAfterAddingOneStatistic() {
+        Transaction transaction = new Transaction(TEST_TIMESTAMP, TEST_AMOUNT);
+        statistics.addTransaction(transaction);
+
+        Statistics newStatistics = new Statistics();
+        newStatistics.setSum(TEST_SUM);
+        newStatistics.setMax(TEST_AMOUNT);
+        newStatistics.setMin(TEST_AMOUNT);
+        newStatistics.setAverage(TEST_AMOUNT);
+        newStatistics.setCount(3);
+        statistics.addStatistics(newStatistics);
+        assertThat(statistics.isEmpty()).isFalse();
+        assertThat(statistics.getCount()).isEqualTo(4);
+        assertThat(statistics.getSum()).isEqualTo(TEST_SUM + TEST_AMOUNT);
+        assertThat(statistics.getMax()).isEqualTo(TEST_AMOUNT);
+        assertThat(statistics.getMin()).isEqualTo(TEST_AMOUNT);
+        assertThat(statistics.getAverage()).isEqualTo(TEST_AMOUNT);
+    }
+
+    @Test
     public void checkAllStatisticsAfterAddingMultipleTransaction() {
         Transaction transaction = new Transaction(TEST_TIMESTAMP, TEST_AMOUNT);
         statistics.addTransaction(transaction);

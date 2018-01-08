@@ -1,5 +1,6 @@
 package com.mycompany.stats;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 
 final class StatisticsAggregator {
@@ -9,7 +10,7 @@ final class StatisticsAggregator {
     // Storing the statistics in a cyclic buffer of fixed 60 size i.e. 60 seconds data.
     private static Statistics[] statistics = new Statistics[60];
 
-    public static void initialize(long currentTimeStampMillis) {
+    static void initialize(long currentTimeStampMillis) {
         baseTimestampSecs = (currentTimeStampMillis / 1000) - 59;
         minTimestampInSecs = baseTimestampSecs;
         IntStream.range(0, statistics.length).forEach(
@@ -25,30 +26,23 @@ final class StatisticsAggregator {
         if ((currentTimestampInMillis - timestamp) > 60000) {
             return false;
         }
-        resetStatisticsArray(currentTimestampInMillis / 1000);
-        int index = (int) ((timestamp / 1000) - baseTimestampSecs) % 60;
-        statistics[index].addTransaction(transaction);
+        synchronized (statistics) {
+            resetStatisticsArray(currentTimestampInMillis / 1000);
+            int index = (int) ((timestamp / 1000) - baseTimestampSecs) % 60;
+            statistics[index].addTransaction(transaction);
+        }
         return true;
     }
 
     static Statistics getAggregatedStatistics(long currentTimestampInMillis) {
-        resetStatisticsArray(currentTimestampInMillis / 1000);
-        Statistics aggregatedStats = new Statistics();
-        for (Statistics statistic : statistics) {
-            if (statistic.getCount() > 0) {
-                aggregatedStats.setCount(aggregatedStats.getCount() + statistic.getCount());
-                aggregatedStats.setSum(aggregatedStats.getSum() + statistic.getSum());
-                aggregatedStats.setMax(
-                        statistic.getMax() > aggregatedStats.getMax() ? statistic.getMax() : aggregatedStats.getMax());
-                aggregatedStats.setMin(
-                        statistic.getMin() < aggregatedStats.getMin() ? statistic.getMin() : aggregatedStats.getMin());
-            }
+        synchronized (statistics) {
+            resetStatisticsArray(currentTimestampInMillis / 1000);
         }
-        aggregatedStats.calculateAverage();
-        return aggregatedStats;
+        return Arrays.stream(statistics)
+                .reduce(new Statistics(), Statistics::addStatistics);
     }
 
-    private static synchronized void resetStatisticsArray(long currentTimestampInSecs) {
+    private static void resetStatisticsArray(long currentTimestampInSecs) {
         long currentMinTimestamp = currentTimestampInSecs - 59;
         long difference = currentMinTimestamp - minTimestampInSecs;
         int start = 0;

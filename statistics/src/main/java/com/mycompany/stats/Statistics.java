@@ -15,7 +15,7 @@ final class Statistics {
         max = Integer.MIN_VALUE;
     }
 
-    public synchronized void addTransaction(Transaction transaction) {
+    synchronized void addTransaction(Transaction transaction) {
         count++;
         sum += transaction.getAmount();
         min = transaction.getAmount() < min ? transaction.getAmount() : min;
@@ -23,12 +23,20 @@ final class Statistics {
         calculateAverage();
     }
 
-    double calculateAverage() {
+    Statistics addStatistics(Statistics newStatistics) {
+        count += newStatistics.getCount();
+        sum += newStatistics.getSum();
+        min = newStatistics.getMin() < min ? newStatistics.getMin() : min;
+        max = newStatistics.getMax() > max ? newStatistics.getMax() : max;
+        calculateAverage();
+        return this;
+    }
+
+    private void calculateAverage() {
         average = count > 0 ? (sum / count) : 0.0;
-        return average;
     }
 
     boolean isEmpty() {
-        return count == 0 ? true : false;
+        return count == 0;
     }
 }
